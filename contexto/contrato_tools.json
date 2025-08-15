@@ -1,0 +1,19 @@
+{
+  "type": "function",
+  "function": {
+    "name": "hola_mundo_mcp",
+    "description": "Es mi Hola Mundo en el contexto de MCP, le paso un mensaje y me devuelve el mismo mensaje y el datetime como atributos de un objeto PingResponse",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "mensaje": {
+          "type": "string",
+          "description": "Devuelve un mensaje y un timestamp"
+        }
+        
+      },
+      "required": ["mensaje"],
+      "additionalProperties": false
+    }
+  }
+}
