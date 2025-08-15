@@ -2,56 +2,65 @@ import json
 import sys
 from fastmcp import Client
 from fastmcp.client.transports import PythonStdioTransport
+import datetime
 
 
-def debe_usar_hola_mundo_mcp(texto: str) -> bool:
-    """Detecta si el texto del modelo indica que quiere usar la herramienta 'hola_mundo_mcp'.
-    Es una detección por palabras clave.
-
-    Args:
-        texto (str): Texto del modelo que queremos analizar.
-
-    Returns:
-        bool: True si el texto sugiere usar la herramienta, False en caso contrario.
+def debe_usar_tool(texto: str, nombre_tool: str, palabras_clave: list[str] | None = None) -> bool:
     """
-    if not texto:
+    Detecta si el texto del modelo indica que quiere usar una herramienta específica.
+    
+    Args:
+        texto (str): El contenido de la respuesta del modelo.
+        nombre_tool (str): Nombre de la herramienta (ej: 'hola_mundo_mcp').
+        palabras_clave (list[str] | None): Lista de frases o palabras clave asociadas.
+    
+    Returns:
+        bool: True si se detecta intención de usar la herramienta.
+    """
+    if not texto or not texto.strip():
         return False
+
     texto = texto.lower()
-    palabras_clave = [
-        "hola_mundo_mcp",
-        "usar herramienta",
-        "ejecutar herramienta",
-        "hola desde cuba"
-    ]
-    return any(palabra in texto for palabra in palabras_clave)
+
+    # Palabras clave por defecto si no se pasan
+    claves = palabras_clave or []
+    if not claves:
+        claves = [
+            f"usar {nombre_tool}",
+            f"ejecutar {nombre_tool}",
+            f"llamar a {nombre_tool}",
+            "usar herramienta",
+            "ejecutar herramienta",
+            "llamar a la herramienta"
+        ]
+
+    # Buscar cualquier palabra clave en el texto
+    return any(palabra in texto for palabra in claves)
 
 
-async def ejecutar_hola_mundo_mcp_manual(mensaje_usuario: str) -> dict:
-    """Llama manualmente a la herramienta 'hola_mundo_mcp' a través del servidor MCP.
-    Extrae el mensaje adecuado del input del usuario.
-    Retorna el resultado formateado para JSON.
 
-    Args:
-        mensaje_usuario (str): Mensaje del usuario que se usará como input para la herramienta.
-
-    Returns:
-        dict: Resultado de la herramienta formateado como dict.
+async def ejecutar_tool_manual(nombre_tool: str, argumentos: dict, script_path: str = "server.py") -> dict:
     """
-    # 1. Decide qué mensaje enviar a la herramienta
-    mensaje_a_enviar = "Hola desde Cuba" if "cuba" in mensaje_usuario.lower() else "Hola"
+    Ejecuta una herramienta MCP manualmente a través del servidor.
     
-    # 2. Crea conexión con el servidor MCP (server.py)
-    transport = PythonStdioTransport(script_path="server.py", python_cmd=sys.executable)
+    Args:
+        nombre_tool (str): Nombre de la herramienta a ejecutar.
+        argumentos (dict): Argumentos que se pasan a la herramienta.
+        script_path (str): Ruta al script del servidor MCP.
     
-    # 3. Se conecta y llama a la herramienta REAL
+    Returns:
+        dict: Resultado de la herramienta, serializable a JSON.
+    """
+    transport = PythonStdioTransport(script_path=script_path, python_cmd=sys.executable)
+    
     async with Client(transport) as client:
-        resultado = await client.call_tool("hola_mundo_mcp", {"mensaje": mensaje_a_enviar})
-        # ↑ Esto ejecuta el código de server.py
+        resultado = await client.call_tool(nombre_tool, argumentos)
     
-    # 4. Formatea el resultado para que el modelo lo entienda
+    # Retorna un dict plano para poder hacer json.dumps()
     return {
-        "mensaje": resultado.data.mensaje,
-        "timestamp": resultado.data.timestamp.isoformat()
+        "tool_name": nombre_tool,
+        "result": {k: v.isoformat() if isinstance(v, datetime) else v 
+                   for k, v in resultado.data.__dict__.items()}
     }
 
 

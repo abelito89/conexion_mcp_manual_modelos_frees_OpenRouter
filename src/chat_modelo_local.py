@@ -358,6 +358,7 @@ def actualizar_json_mensaje_qwen(lista_messages: list, response: requests.Respon
 ruta_actual = Path(".")
 ruta_raiz = ruta_actual.parent
 ruta_mensaje_modelo = ruta_raiz / "contexto/mensaje_modelo.json"
+
 if __name__ == "__main__":
     lista_messages = cargar_mensajes(str(ruta_mensaje_modelo))
     agregar_mensaje_usuario(lista_messages, "Hola, ¿cómo te llamas?")
