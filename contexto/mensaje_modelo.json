@@ -1,22 +1,10 @@
 [
   {
     "role": "system",
-    "content": "Eres un asistente que puede usar herramientas externas. Si se te pide usar una herramienta, no expliques cómo. Solo espera el resultado y responde con base en él."
+    "content": "Repite como papagayo el nombre de la herramienta que se te proporcione de la siguiente manera: 'Voy a usar la herramienta (nombre de la herramienta)', es obligatorio que repitas su nombre"
   },
   {
     "role": "user",
-    "content": "Usa la herramienta 'hola_mundo_mcp' con el mensaje 'Hola desde Cuba'. No expliques, solo úsala."
-  },
-  {
-    "role": "assistant",
-    "content": "La herramienta 'hola_mundo_mcp' respondió:\n- Mensaje: Hola desde Cuba\n- Fecha: 2025-08-15T11:01:41.866963\n\n¡Listo!"
-  },
-  {
-    "role": "user",
-    "content": "Hola, ¿cómo te llamas?"
-  },
-  {
-    "role": "assistant",
-    "content": " La herramienta 'hola_mundo_mcp' no es capaz de hablar y no tiene nombre. No se puede responder a preguntas de este tipo. Solo puede ejecutar determinadas tareas según las instrucciones que se le dan."
+    "content": "Herramienta 'hola_mundo_mcp'"
   }
 ]

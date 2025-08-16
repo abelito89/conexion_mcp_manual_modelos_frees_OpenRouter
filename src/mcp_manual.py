@@ -3,39 +3,67 @@ import sys
 from fastmcp import Client
 from fastmcp.client.transports import PythonStdioTransport
 import datetime
+from datetime import datetime
 
 
 def debe_usar_tool(texto: str, nombre_tool: str, palabras_clave: list[str] | None = None) -> bool:
     """
-    Detecta si el texto del modelo indica que quiere usar una herramienta específica.
+    Detecta si el modelo quiere usar una herramienta específica.
+    Comprueba tanto palabras clave personalizadas como patrones de acción genéricos.
+    No distingue entre mayúsculas y minúsculas.
     
     Args:
         texto (str): El contenido de la respuesta del modelo.
-        nombre_tool (str): Nombre de la herramienta (ej: 'hola_mundo_mcp').
-        palabras_clave (list[str] | None): Lista de frases o palabras clave asociadas.
+        nombre_tool (str): Nombre exacto de la herramienta (ej: 'hola_mundo_mcp').
+        palabras_clave (list[str] | None): Lista opcional de frases o palabras clave personalizadas.
     
     Returns:
-        bool: True si se detecta intención de usar la herramienta.
+        bool: True si se detecta intención de usar la herramienta, False en caso contrario.
     """
     if not texto or not texto.strip():
         return False
 
-    texto = texto.lower()
+    # Normalizar: convertir todo a minúsculas
+    texto = texto.lower().strip()
+    nombre_tool = nombre_tool.lower().strip()
 
-    # Palabras clave por defecto si no se pasan
-    claves = palabras_clave or []
-    if not claves:
-        claves = [
-            f"usar {nombre_tool}",
-            f"ejecutar {nombre_tool}",
-            f"llamar a {nombre_tool}",
-            "usar herramienta",
-            "ejecutar herramienta",
-            "llamar a la herramienta"
-        ]
+    # 1. Si se pasan palabras clave, usarlas primero (en minúsculas)
+    if palabras_clave:
+        for palabra in palabras_clave:
+            if palabra.lower().strip() in texto:
+                return True
 
-    # Buscar cualquier palabra clave en el texto
-    return any(palabra in texto for palabra in claves)
+    # 2. Palabras clave por defecto (todas en minúsculas por construcción)
+    claves_por_defecto = [
+        f"{nombre_tool}",
+        f"voy a usar {nombre_tool}",
+        f"voy a usar la herramienta {nombre_tool}",  # ← faltaba coma antes
+        f"usaré {nombre_tool}",
+        f"procedo a usar {nombre_tool}",
+        f"ejecutaré {nombre_tool}",
+        f"llamaré a {nombre_tool}",
+        f"activaré {nombre_tool}",
+        f"quiero usar {nombre_tool}",
+        f"es {nombre_tool}"
+    ]
+
+    for clave in claves_por_defecto:
+        if clave in texto:
+            return True
+
+    # 3. Como respaldo: ¿menciona la herramienta en contexto de herramientas?
+    contexto_herramientas = [
+        "usar herramienta",
+        "ejecutar herramienta",
+        "llamar a la herramienta",
+        "activar herramienta"
+    ]
+    if nombre_tool in texto:
+        for contexto in contexto_herramientas:
+            if contexto in texto:
+                return True
+
+    return False
 
 
 

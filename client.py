@@ -17,7 +17,7 @@ from src.chat_modelo_local import (cargar_mensajes, crear_payload, hacer_solicit
 from src.mcp_manual import (debe_usar_tool, ejecutar_tool_manual, agregar_al_historial_simulando_call_tool)
 from src.contrato_y_payload import (lectura_contrato_tools, payload_para_modelo_con_herramientas)
 from src.procesamiento_respuesta import (extraer_mensaje_modelo, extraer_contenido, imprimir_estructura_mensaje_enviado)
-from src.historial_y_contexto import (extraer_mensaje_usuario, guardar_historial)
+from src.historial_y_contexto import (extraer_mensaje_usuario, guardar_historial,crear_contexto_temporal)
 
 
 async def main():
@@ -45,20 +45,18 @@ async def main():
     18. Limita el historial para evitar crecimiento infinito.
     19. Guarda el historial actualizado en 'mensaje_modelo.json'.
     """
+
+    ruta_temporal = crear_contexto_temporal()
+    mensajes = cargar_mensajes(str(ruta_temporal))
+
     # === 1. Cargar contrato de herramientas desde archivo JSON ===
     # El contrato define qué herramientas están disponibles y cómo se llaman.
     # Es necesario para incluir 'tools' en el payload, aunque el modelo no las use nativamente.
+
     contrato_tools = lectura_contrato_tools()
     if not contrato_tools:
         print("Error: No se pudo cargar el contrato de las tools.")
         return
-
-    # === 2. Cargar historial previo de mensajes ===
-    # Se carga el historial desde un archivo JSON en la carpeta 'contexto'.
-    # Este historial incluye el system prompt y el contexto de la conversación.
-    ruta_actual = Path(".")
-    ruta_contexto = ruta_actual / "contexto/mensaje_modelo.json"
-    mensajes = cargar_mensajes(str(ruta_contexto))
 
     # === 3. Establecer conexión con OpenRouter ===
     # Se obtienen la URL y las cabeceras necesarias para autenticarse con la API.
@@ -95,11 +93,11 @@ async def main():
     # Se analiza el contenido del mensaje para detectar si el modelo quiere
     # usar la herramienta 'hola_mundo_mcp', incluso si no genera tool_calls.
     # Se usa detección por palabras clave y contexto.
-    if debe_usar_tool(
-        contenido,
-        nombre_tool="hola_mundo_mcp",
-        palabras_clave=["hola desde cuba", "enviar saludo", "mensaje especial"]
-    ):
+    if debe_usar_tool(contenido, nombre_tool="hola_mundo_mcp", palabras_clave=[]):
+        mensajes[0] = {
+        "role": "system",
+        "content": "Eres un asistente útil. Usa el contexto para responder."
+        }
         print("Se detectó intención de usar 'hola_mundo_mcp'. Llamando a server.py...")
 
         # === 9. Obtener último mensaje del usuario para contexto ===
@@ -127,31 +125,43 @@ async def main():
                 resultado=resultado_completo["result"]
             )
 
-            # === 12. Preparar segunda llamada con resultado de la tool ===
+            # === 12. Preguntar por el resultado (¡nueva intención!) ===
+            mensajes.append({
+                "role": "user",
+                "content": "¿Qué resultado se obtuvo?"
+            })
+
+            # === 13. Preparar segunda llamada con resultado de la tool ===
             # Se crea un nuevo payload con el historial actualizado,
             # incluyendo el resultado de la herramienta.
             payload_final = crear_payload(mensajes, "mistral")
             response_final = hacer_solicitud_http_al_modelo(url, headers, payload_final)
 
-            # === 13. Extraer respuesta final del modelo ===
+            # === 14. Extraer respuesta final del modelo ===
             # El modelo ahora puede usar el resultado de la herramienta
             # para generar una respuesta coherente.
             respuesta_final = extraer_contenido(response_final)
             print("✅ Respuesta final:", respuesta_final)
 
-            # === 14. Agregar respuesta final al historial ===
+            # === 15. Agregar respuesta final al historial ===
             # Se guarda la respuesta final para mantener la conversación.
             mensajes.append({"role": "assistant", "content": respuesta_final})
 
-            # === 15. Limitar historial para evitar crecimiento ===
+            # === 16. Limitar historial para evitar crecimiento ===
             # Se mantienen solo los últimos intercambios relevantes
             # para no saturar el contexto ni el archivo.
             mensajes = limitar_historial_inteligente(mensajes, max_intercambios=5)
 
-            # === 16. Guardar historial actualizado ===
+            # === 17. Guardar historial actualizado ===
             # Se guarda el historial en disco para mantener la memoria
             # entre ejecuciones del cliente.
             guardar_historial(mensajes)
+
+            # === Final del script ===
+            if ruta_temporal.exists():
+                os.remove(ruta_temporal)
+                print("🗑️ Archivo temporal eliminado. Listo para la próxima ejecución.")
+
 
         except Exception as e:
             print(f"Error al ejecutar la tool: {e}")

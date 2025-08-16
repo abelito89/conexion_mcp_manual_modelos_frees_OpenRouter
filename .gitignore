@@ -2,3 +2,4 @@
 /venv/
 *.pyc
 token.txt
+/contexto/historial_temp.json

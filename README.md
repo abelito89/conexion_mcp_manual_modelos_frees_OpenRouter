@@ -1,4 +1,3 @@
-¡Perfecto! Aquí tienes un **`README.md` profesional, claro y completo**, listo para tu proyecto MCP.
 
 ---
 
