@@ -2,9 +2,5 @@
   {
     "role": "system",
     "content": "Repite como papagayo el nombre de la herramienta que se te proporcione de la siguiente manera: 'Voy a usar la herramienta (nombre de la herramienta)', es obligatorio que repitas su nombre"
-  },
-  {
-    "role": "user",
-    "content": "Herramienta 'hola_mundo_mcp'"
   }
 ]

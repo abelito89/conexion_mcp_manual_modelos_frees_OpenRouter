@@ -1,19 +1,46 @@
-{
-  "type": "function",
-  "function": {
-    "name": "hola_mundo_mcp",
-    "description": "Es mi Hola Mundo en el contexto de MCP, le paso un mensaje y me devuelve el mismo mensaje y el datetime como atributos de un objeto PingResponse",
-    "parameters": {
-      "type": "object",
-      "properties": {
-        "mensaje": {
-          "type": "string",
-          "description": "Devuelve un mensaje y un timestamp"
-        }
-        
-      },
-      "required": ["mensaje"],
-      "additionalProperties": false
+[
+  {
+    "type": "function",
+    "function": {
+      "name": "hola_mundo_mcp",
+      "description": "Es mi Hola Mundo en el contexto de MCP, le paso un mensaje y me devuelve el mismo mensaje y el datetime como atributos de un objeto PingResponse",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "mensaje": {
+            "type": "string",
+            "description": "Devuelve un mensaje y un timestamp"
+          }
+          
+        },
+        "required": ["mensaje"],
+        "additionalProperties": false
+      }
     }
   }
-}
+  ,
+
+  {
+    "type": "function",
+    "function": {
+      "name": "suma",
+      "description": "Devuelve la suma de dos números.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "numero1": {
+            "type": "int",
+            "description": "Primer número a sumar"
+          },
+          "numero2": {
+            "type": "int",
+            "description": "Segundo número a sumar"
+          }
+        },
+        "required": ["numero1", "numero2"],
+        "additionalProperties": false
+      }
+    }
+  }
+
+]

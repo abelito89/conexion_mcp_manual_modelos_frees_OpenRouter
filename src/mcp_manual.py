@@ -4,6 +4,7 @@ from fastmcp import Client
 from fastmcp.client.transports import PythonStdioTransport
 import datetime
 from datetime import datetime
+from historial_y_contexto import extraer_mensaje_usuario
 
 
 def debe_usar_tool(texto: str, nombre_tool: str, palabras_clave: list[str] | None = None) -> bool:
@@ -64,6 +65,24 @@ def debe_usar_tool(texto: str, nombre_tool: str, palabras_clave: list[str] | Non
                 return True
 
     return False
+
+
+def extraer_argumentos_necesarios_herramienta(herramienta_server_mcp, mensajes) -> dict:
+    if herramienta_server_mcp == "hola_mundo_mcp":
+        ultimo_mensaje_usuario = extraer_mensaje_usuario(mensajes)
+        mensaje_a_enviar = "Hola desde Cuba" if "cuba" in ultimo_mensaje_usuario.lower() else "Hola"
+        # === 10. Ejecutar herramienta genérica vía FastMCP ===
+        # Se conecta al servidor MCP (server.py) y se llama a la herramienta.
+        # El resultado se devuelve en formato serializable.
+        argumentos_tool = {"mensaje": mensaje_a_enviar}
+    elif herramienta_server_mcp == "suma":
+        argumentos_tool = {"numero1": 5, "numero2": 3}
+    
+    else:
+# Para cualquier otra herramienta, puedes manejarla aquí
+        print(f"⚠️ No se conocen los argumentos para '{herramienta_server_mcp}'")
+        return {}
+    return argumentos_tool
 
 
 
