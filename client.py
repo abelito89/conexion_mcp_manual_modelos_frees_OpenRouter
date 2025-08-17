@@ -17,7 +17,14 @@ from src.mcp_manual import (debe_usar_tool, extraer_argumentos_necesarios_herram
 from src.contrato_y_payload import (lectura_contrato_tools, payload_para_modelo_con_herramientas)
 from src.procesamiento_respuesta import (extraer_mensaje_modelo, extraer_contenido, imprimir_estructura_mensaje_enviado)
 from src.historial_y_contexto import (guardar_historial, crear_contexto_temporal)
+from src.menu_interactivo import menu_interactivo
 
+
+# Mapeo de opciones
+HERRAMIENTAS_DISPONIBLES = {
+    1: "hola_mundo_mcp",
+    2: "suma"
+}
 
 async def main(herramienta_server_mcp: str) -> None:
     """
@@ -144,6 +151,9 @@ async def main(herramienta_server_mcp: str) -> None:
             respuesta_final = extraer_contenido(response_final)
             print("✅ Respuesta final:", respuesta_final)
 
+            # === PAUSA PARA QUE EL USUARIO PUEDA LEER LA RESPUESTA ===
+            input("\n👉 Presiona ENTER para volver al menú...")  # ← Aquí está la clave
+
             # === 16. Agregar respuesta final al historial ===
             # Se guarda la respuesta final para mantener la conversación.
             mensajes.append({"role": "assistant", "content": respuesta_final})
@@ -176,4 +186,4 @@ async def main(herramienta_server_mcp: str) -> None:
 
 
 if __name__ == "__main__":
-    asyncio.run(main("suma"))
+    menu_interactivo(main)
