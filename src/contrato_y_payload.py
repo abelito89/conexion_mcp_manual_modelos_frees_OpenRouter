@@ -1,6 +1,7 @@
 import json
 from chat_modelo_local import crear_payload
 from pathlib import Path
+from logging_mcp import error
 
 ruta_actual = Path(".")
 ruta_raiz = ruta_actual.parent
@@ -21,7 +22,7 @@ def lectura_contrato_tools() -> list:
         with open(str(ruta_contrato_tools), "r", encoding="utf-8") as f:
             return json.load(f)
     except (FileNotFoundError, json.JSONDecodeError) as e:
-        print(f"Error al leer contrato_tools.json: {e}")
+        error(f"Error al leer contrato_tools.json: {e}")
         return []
     
 

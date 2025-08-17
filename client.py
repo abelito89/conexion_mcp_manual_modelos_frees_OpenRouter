@@ -6,7 +6,6 @@ Usa FastMCP para llamar a la herramienta en server.py.
 """
 import sys
 import os
-import asyncio
 
 # Añadir el directorio 'src' al path para permitir imports relativos
 sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
@@ -18,6 +17,7 @@ from src.contrato_y_payload import (lectura_contrato_tools, payload_para_modelo_
 from src.procesamiento_respuesta import (extraer_mensaje_modelo, extraer_contenido, imprimir_estructura_mensaje_enviado)
 from src.historial_y_contexto import (guardar_historial, crear_contexto_temporal)
 from src.menu_interactivo import menu_interactivo
+from src.logging_mcp import info, success, error, warning, separator
 
 
 # Mapeo de opciones
@@ -71,7 +71,7 @@ async def main(herramienta_server_mcp: str) -> None:
     # Es necesario para incluir 'tools' en el payload, aunque el modelo no las use nativamente.
     contrato_tools = lectura_contrato_tools()
     if not contrato_tools:
-        print("Error: No se pudo cargar el contrato de las tools.")
+        error("Error: No se pudo cargar el contrato de las tools.")
         return
 
     # === 3. Establecer conexión con OpenRouter ===
@@ -87,11 +87,11 @@ async def main(herramienta_server_mcp: str) -> None:
     # === 5. Enviar solicitud al modelo ===
     # Se envía la solicitud a través de la API de OpenRouter.
     # El modelo puede responder con texto o, en teoría, con tool_calls.
-    print("Enviando a al modelo...")
+    info("Enviando a al modelo...")
     response = hacer_solicitud_http_al_modelo(url, headers, payload_con_herramientas)
 
     if response.status_code != 200:
-        print("Error:", response.text)
+        error(f"Error {response.status_code}: {response.text.strip()}")
         return
 
     # === 6. Extraer mensaje del modelo ===
@@ -116,7 +116,7 @@ async def main(herramienta_server_mcp: str) -> None:
             "role": "system",
             "content": "Eres un asistente útil. Usa el contexto para responder."
         }
-        print(f"Se detectó intención de usar '{herramienta_server_mcp}'. Llamando a server.py...")
+        info(f"Se detectó intención de usar '{herramienta_server_mcp}'. Llamando a server.py...")
 
         try:
             # === 11. Ejecutar herramienta genérica vía FastMCP ===
@@ -149,7 +149,8 @@ async def main(herramienta_server_mcp: str) -> None:
             # El modelo ahora puede usar el resultado de la herramienta
             # para generar una respuesta coherente.
             respuesta_final = extraer_contenido(response_final)
-            print("✅ Respuesta final:", respuesta_final)
+            separator()
+            success(f"✅ Respuesta final: {respuesta_final}")
 
             # === PAUSA PARA QUE EL USUARIO PUEDA LEER LA RESPUESTA ===
             input("\n👉 Presiona ENTER para volver al menú...")  # ← Aquí está la clave
@@ -173,16 +174,17 @@ async def main(herramienta_server_mcp: str) -> None:
             # ejecución comience con una copia limpia de la plantilla.
             if ruta_temporal.exists():
                 os.remove(ruta_temporal)
-                print("🗑️ Archivo temporal eliminado. Listo para la próxima ejecución.")
+                success("🗑️ Archivo temporal eliminado. Listo para la próxima ejecución.")
 
         except Exception as e:
-            print(f"Error al ejecutar la tool: {e}")
+            error(f"Error al ejecutar la tool: {e}")
 
     else:
         # === 17. Caso: no se detectó intención de usar herramienta ===
         # El modelo no mostró interés en usar herramientas.
         # Se finaliza sin invocar MCP.
-        print("El modelo no quiso usar ninguna tool.")
+        separator()
+        warning("El modelo no quiso usar ninguna tool.")
 
 
 if __name__ == "__main__":

@@ -7,6 +7,7 @@ Permite al usuario elegir una herramienta y mantiene el programa activo hasta qu
 import asyncio
 import os
 from typing import Callable, Any
+from logging_mcp import info, success, error, warning, debug, separator
 
 
 def limpiar_pantalla() -> None:
@@ -19,7 +20,8 @@ def cerrar_programa() -> None:
     """
     Imprime un mensaje de despedida al cerrar el programa.
     """
-    print("\n👋 Gracias por usar el cliente MCP. ¡Hasta pronto!")
+    separator()
+    info("\n👋 Gracias por usar el cliente MCP. ¡Hasta pronto!")
 
 
 def menu_interactivo(main_func: Callable[[str], Any]) -> None:
@@ -56,9 +58,11 @@ def menu_interactivo(main_func: Callable[[str], Any]) -> None:
             elif opcion in HERRAMIENTAS_DISPONIBLES:
                 asyncio.run(main_func(HERRAMIENTAS_DISPONIBLES[opcion]))
             else:
-                print("❌ Opción no válida. Elige un número del menú.")
+                error("❌ Opción no válida. Elige un número del menú.")
+                input("   Presiona ENTER para continuar...")  # ← PAUSA AQUÍ
         except ValueError:
-            print("❌ Por favor, ingresa un número válido.")
+            error("❌ Por favor, ingresa un número válido.")
+            input("   Presiona ENTER para continuar...")  # ← PAUSA AQUÍ
         except KeyboardInterrupt:
             print("")  # Nueva línea después de Ctrl+C
             cerrar_programa()

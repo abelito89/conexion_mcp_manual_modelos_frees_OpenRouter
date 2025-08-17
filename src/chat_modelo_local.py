@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 import json
 from typing import Dict, List, Tuple, Any
 from pathlib import Path
+from logging_mcp import info, error
 
 
 load_dotenv()
@@ -233,7 +234,7 @@ def cargar_mensajes(mensaje_json:str) -> list:
             lista_messages = json.load(file)
             return lista_messages
     except FileNotFoundError:
-        print(f"Archivo {mensaje_json} no encontrado. Retornando lista vacía.")
+        error(f"Archivo {mensaje_json} no encontrado. Retornando lista vacía.")
         return []
 
 
@@ -248,7 +249,7 @@ def agregar_mensaje_usuario(lista_messages:list, mensaje_usuario: str) -> None:
     try:
         lista_messages.append({"role": "user", "content": mensaje_usuario})
     except Exception as e:
-        print(f"Error al agregar mensaje del usuario: {e}")
+        error(f"Error al agregar mensaje del usuario: {e}")
         raise
 
 
@@ -274,7 +275,7 @@ def crear_payload(lista_messages:list,modelo: str) -> dict:
         }
         return data
     except Exception as e:
-        print(f"Error al crear el payload: {e}")
+        error(f"Error al crear el payload: {e}")
         raise
 
 
@@ -298,9 +299,9 @@ def hacer_solicitud_http_al_modelo(url: str, headers: dict, data: dict) -> reque
         return response  # ← Solo si fue exitosa
     except requests.RequestException as e:
         if hasattr(e, 'response') and e.response is not None:
-            print(f"Error {e.response.status_code}: {e.response.text}")
+            error(f"Error {e.response.status_code}: {e.response.text}")
         else:
-            print(f"Error de conexión: {e}")
+            error(f"Error de conexión: {e}")
         raise  # Re-lanza para que el llamador lo maneje
 
 
@@ -327,15 +328,14 @@ def actualizar_json_mensaje_qwen(lista_messages: list, response: requests.Respon
         - El historial se limita a los últimos 5 intercambios (ajustable en limitar_historial_inteligente). ← CAMBIO (actualizado en docstring)
     """
     if response.status_code != 200:
-        print("Error:", response.status_code)
-        print(response.text)
+        error(f"Error: {response.status_code}. Contenido del error:{response.text}")
         return
 
     try:
         result = response.json()
         reply = result["choices"][0]["message"]["content"]
-        print("Respuesta:")
-        print(reply)
+        info(f"Respuesta:")
+        info(f"{reply}")
 
         # Agregar la respuesta del modelo al historial
         lista_messages.append({"role": "assistant", "content": reply})
@@ -348,9 +348,9 @@ def actualizar_json_mensaje_qwen(lista_messages: list, response: requests.Respon
             json.dump(lista_limitada, file, indent=2, ensure_ascii=False)
 
     except json.JSONDecodeError as e:
-        print(f"Error al decodificar la respuesta JSON: {e}")
-        print("Contenido recibido (no es JSON):")
-        print(response.text)
+        error(f"Error al decodificar la respuesta JSON: {e}")
+        error("Contenido recibido (no es JSON):")
+        error(f"{response.text}")
 
 
 

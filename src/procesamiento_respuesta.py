@@ -1,5 +1,6 @@
 import json
 from requests import Response
+from logging_mcp import info, success, error, warning, debug, separator
 
 
 def extraer_mensaje_modelo(response: Response) -> dict:
@@ -42,6 +43,7 @@ def imprimir_estructura_mensaje_enviado(mensaje: dict) -> None:
         mensaje (dict): Mensaje del modelo que queremos mostrar.
     """
     print("\n=== ESTRUCTURA DE 'mensaje' ===")
-    print(json.dumps(mensaje, indent=2, ensure_ascii=False))
+    info(f"{json.dumps(mensaje, indent=2, ensure_ascii=False)}")
     print("================================\n")
-    print("El modelo dice:", mensaje.get("content") or "(sin texto)")
+    #print("El modelo dice:", mensaje.get("content") or "(sin texto)")
+    info(f"El modelo dice:{mensaje.get('content')} or (sin texto)")

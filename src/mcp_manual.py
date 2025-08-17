@@ -5,6 +5,7 @@ from fastmcp.client.transports import PythonStdioTransport
 import datetime
 from datetime import datetime
 from historial_y_contexto import extraer_mensaje_usuario
+from logging_mcp import warning
 
 
 def debe_usar_tool(texto: str, nombre_tool: str, palabras_clave: list[str] | None = None) -> bool:
@@ -80,7 +81,7 @@ def extraer_argumentos_necesarios_herramienta(herramienta_server_mcp, mensajes) 
     
     else:
 # Para cualquier otra herramienta, puedes manejarla aquí
-        print(f"⚠️ No se conocen los argumentos para '{herramienta_server_mcp}'")
+        warning(f"⚠️ No se conocen los argumentos para '{herramienta_server_mcp}'")
         return {}
     return argumentos_tool
 
