@@ -5,7 +5,7 @@ from fastmcp.client.transports import PythonStdioTransport
 import datetime
 from datetime import datetime
 from historial_y_contexto import extraer_mensaje_usuario
-from logging_mcp import warning
+from logging_mcp import warning, info, success, separator
 
 
 def debe_usar_tool(texto: str, nombre_tool: str, palabras_clave: list[str] | None = None) -> bool:
@@ -68,7 +68,17 @@ def debe_usar_tool(texto: str, nombre_tool: str, palabras_clave: list[str] | Non
     return False
 
 
-def extraer_argumentos_necesarios_herramienta(herramienta_server_mcp, mensajes) -> dict:
+def extraer_argumentos_necesarios_herramienta(herramienta_server_mcp:str, mensajes:list) -> dict:
+    """Extrae los argumentos que necesita la herramienta invocada
+
+    Args:
+        herramienta_server_mcp (str): Nombre de la herramienta cuyos argumentos se desea extraer
+        mensajes (list): Lista de mensajes del historial de conversación.
+
+    Returns:
+        dict: Diccionario con los nombres de los argumentos como llaves y sus valores como vaalores
+    """
+
     if herramienta_server_mcp == "hola_mundo_mcp":
         ultimo_mensaje_usuario = extraer_mensaje_usuario(mensajes)
         mensaje_a_enviar = "Hola desde Cuba" if "cuba" in ultimo_mensaje_usuario.lower() else "Hola"
@@ -128,3 +138,11 @@ def agregar_al_historial_simulando_call_tool(mensajes: list, tool_name: str, too
         "tool_call_id": tool_call_id,
         "content": json.dumps(resultado, ensure_ascii=False)
     })
+
+def resumen_ejecucion(herramienta_server_mcp,argumentos_tool, resultado_completo):
+    separator()
+    success("Ejecución completada")
+    info(f"   Herramienta: {herramienta_server_mcp}")
+    info(f"   Entrada: {argumentos_tool}")  # o ajusta según la herramienta
+    info(f"   Resultado: {resultado_completo['result']}")
+    info(f"   Hora: {datetime.now().strftime('%H:%M:%S')}")

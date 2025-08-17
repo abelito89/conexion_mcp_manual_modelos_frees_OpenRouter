@@ -12,19 +12,13 @@ sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
 
 # 🔧 Importamos funciones de los otros módulos
 from src.chat_modelo_local import (cargar_mensajes, crear_payload, hacer_solicitud_http_al_modelo, limitar_historial_inteligente, openrouter_connect)
-from src.mcp_manual import (debe_usar_tool, extraer_argumentos_necesarios_herramienta, ejecutar_tool_manual, agregar_al_historial_simulando_call_tool)
+from src.mcp_manual import (debe_usar_tool, extraer_argumentos_necesarios_herramienta, ejecutar_tool_manual, agregar_al_historial_simulando_call_tool, resumen_ejecucion)
 from src.contrato_y_payload import (lectura_contrato_tools, payload_para_modelo_con_herramientas)
 from src.procesamiento_respuesta import (extraer_mensaje_modelo, extraer_contenido, imprimir_estructura_mensaje_enviado)
 from src.historial_y_contexto import (guardar_historial, crear_contexto_temporal)
 from src.menu_interactivo import menu_interactivo
 from src.logging_mcp import info, success, error, warning, separator
 
-
-# Mapeo de opciones
-HERRAMIENTAS_DISPONIBLES = {
-    1: "hola_mundo_mcp",
-    2: "suma"
-}
 
 async def main(herramienta_server_mcp: str) -> None:
     """
@@ -152,26 +146,24 @@ async def main(herramienta_server_mcp: str) -> None:
             separator()
             success(f"✅ Respuesta final: {respuesta_final}")
 
+
+            argumentos_tool = extraer_argumentos_necesarios_herramienta(herramienta_server_mcp, mensajes)
+            resumen_ejecucion(herramienta_server_mcp,argumentos_tool,resultado_completo)
+
             # === PAUSA PARA QUE EL USUARIO PUEDA LEER LA RESPUESTA ===
             input("\n👉 Presiona ENTER para volver al menú...")  # ← Aquí está la clave
+            
 
             # === 16. Agregar respuesta final al historial ===
-            # Se guarda la respuesta final para mantener la conversación.
             mensajes.append({"role": "assistant", "content": respuesta_final})
 
             # === 17. Limitar historial para evitar crecimiento ===
-            # Se mantienen solo los últimos intercambios relevantes
-            # para no saturar el contexto ni el archivo.
             mensajes = limitar_historial_inteligente(mensajes, max_intercambios=5)
 
             # === 18. Guardar historial actualizado ===
-            # Se guarda el historial en disco para mantener la memoria
-            # entre ejecuciones del cliente.
             guardar_historial(mensajes)
 
             # === Final del script: limpiar archivo temporal ===
-            # Se elimina el archivo temporal para asegurar que la próxima
-            # ejecución comience con una copia limpia de la plantilla.
             if ruta_temporal.exists():
                 os.remove(ruta_temporal)
                 success("🗑️ Archivo temporal eliminado. Listo para la próxima ejecución.")

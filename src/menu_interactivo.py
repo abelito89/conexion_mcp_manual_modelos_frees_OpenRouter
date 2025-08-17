@@ -8,7 +8,13 @@ import asyncio
 import os
 from typing import Callable, Any
 from logging_mcp import info, success, error, warning, debug, separator
+from pathlib import Path
+import json
 
+
+ruta_actual = Path(".")
+ruta_raiz = ruta_actual.parent
+RUTA_CONTRATO = ruta_raiz / "contexto/contrato_tools.json"
 
 def limpiar_pantalla() -> None:
     """Limpia la pantalla del terminal de forma portable (Windows, Linux, Mac).
@@ -24,6 +30,24 @@ def cerrar_programa() -> None:
     info("\n👋 Gracias por usar el cliente MCP. ¡Hasta pronto!")
 
 
+def cargar_herramientas_del_contrato() -> dict[int, str]:
+    """Carga las herramientas disponibles desde contrato_tools.json.
+    Devuelve un diccionario {número: nombre_herramienta}.
+
+    Returns:
+        dict[int, str]: Diccionario con las herramientas disponibles.
+        Si no se puede cargar el contrato, retorna un diccionario con una herramienta por defecto.
+    """
+    try:
+        with open(RUTA_CONTRATO, "r", encoding="utf-8") as f:
+            contrato = json.load(f)
+        return {i + 1: tool["function"]["name"] for i, tool in enumerate(contrato)}
+    except Exception as e:
+        from .logging_mcp import error
+        error(f"No se pudo cargar el contrato de herramientas: {e}")
+        return {1: "suma"}  # Fallback
+
+
 def menu_interactivo(main_func: Callable[[str], Any]) -> None:
     """
     Muestra un menú interactivo para seleccionar herramientas.
@@ -35,11 +59,11 @@ def menu_interactivo(main_func: Callable[[str], Any]) -> None:
             Se espera que reciba un str (nombre de herramienta) y devuelva cualquier tipo.
             Ejemplo: `main(herramienta: str) -> None`
     """
-    HERRAMIENTAS_DISPONIBLES = {
-        1: "hola_mundo_mcp",
-        2: "suma"
-    }
-
+    #HERRAMIENTAS_DISPONIBLES = {
+    #    1: "hola_mundo_mcp",
+    #    2: "suma"
+    #}
+    HERRAMIENTAS_DISPONIBLES = cargar_herramientas_del_contrato()
     while True:
         limpiar_pantalla()
         print("\n" + "🔧" * 20)
@@ -56,6 +80,7 @@ def menu_interactivo(main_func: Callable[[str], Any]) -> None:
                 cerrar_programa()
                 break
             elif opcion in HERRAMIENTAS_DISPONIBLES:
+                info(f"🔄 Ejecutando herramienta: {HERRAMIENTAS_DISPONIBLES[opcion]}")
                 asyncio.run(main_func(HERRAMIENTAS_DISPONIBLES[opcion]))
             else:
                 error("❌ Opción no válida. Elige un número del menú.")
@@ -67,3 +92,5 @@ def menu_interactivo(main_func: Callable[[str], Any]) -> None:
             print("")  # Nueva línea después de Ctrl+C
             cerrar_programa()
             break
+
+
