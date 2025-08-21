@@ -18,6 +18,7 @@ from src.procesamiento_respuesta import (extraer_mensaje_modelo, extraer_conteni
 from src.historial_y_contexto import (guardar_historial, crear_contexto_temporal)
 from src.menu_interactivo import menu_interactivo
 from src.logging_mcp import info, success, error, warning, separator
+from src.deteccion_intencion.detector import debe_usar_tool_semantico
 
 
 async def main(herramienta_server_mcp: str) -> None:
@@ -84,11 +85,11 @@ async def main(herramienta_server_mcp: str) -> None:
         contenido = mensaje.get("content", "").strip()
 
         # Detectar intención de usar la herramienta
-        if debe_usar_tool(contenido, nombre_tool=herramienta_server_mcp):
-            # Cambiar el system prompt para la fase de respuesta útil
+        if debe_usar_tool_semantico(contenido, nombre_tool=herramienta_server_mcp):
+            # Cambiar el system prompt para forzar respuesta con el resultado de la herramienta
             mensajes[0] = {
                 "role": "system",
-                "content": "Eres un asistente útil. Usa el contexto para responder."
+                "content": "Eres un asistente que SOLO debe mostrar el resultado de la herramienta ejecutada. Para suma, muestra el detalle de la suma. Para hola_mundo_mcp, muestra el mensaje y el timestamp. No agregues explicaciones adicionales ni otro texto."
             }
             info(f"Se detectó intención de usar '{herramienta_server_mcp}'. Llamando a server.py...")
 
@@ -113,7 +114,7 @@ async def main(herramienta_server_mcp: str) -> None:
                 # Preguntar al modelo qué sigue (para encadenamiento)
                 mensajes.append({
                     "role": "user",
-                    "content": "¿Qué sigue?"
+                    "content": f"La herramienta '{herramienta_server_mcp}' devolvió un resultado. Resume en una frase el valor que se obtuvo y qué significa."
                 })
 
             except Exception as e:

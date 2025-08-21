@@ -1,5 +1,36 @@
+# Ambiente y configuración
 .env
-/venv/
-*.pyc
 token.txt
+.python-version
+.venv
+venv/
+ENV/
+
+# Caché y archivos compilados de Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.pyc
+
+# Directorios de distribución
+build/
+dist/
+eggs/
+*.egg-info/
+
+# VSCode
+.vscode/
+*.code-workspace
+.history
+
+# Archivos temporales y de contexto
 /contexto/historial_temp.json
+/contexto/temp_context.json
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
+*.swp
+*~

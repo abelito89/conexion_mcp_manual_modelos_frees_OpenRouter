@@ -1,4 +1,6 @@
 
+# 🧠 Cliente MCP con Ejecución Manual de Herramientas
+
 ### ✅ `README.md` — Cliente MCP con Ejecución Manual de Herramientas
 
 
@@ -102,6 +104,78 @@ proyecto/
 - ✅ Todas las salidas de error o éxito se pausan para que el usuario pueda leerlas.
 
 ---
+
+## � Instalación y Configuración
+
+1. **Clonar el repositorio**
+```bash
+git clone https://github.com/abelito89/conexion_mcp_manual_modelos_frees_OpenRouter.git
+cd conexion_mcp_manual_modelos_frees_OpenRouter
+```
+
+2. **Crear y activar entorno virtual**
+```bash
+python -m venv venv
+# Windows
+.\venv\Scripts\activate
+# Linux/Mac
+source venv/bin/activate
+```
+
+3. **Instalar dependencias**
+```bash
+pip install -r requirements.txt
+```
+
+4. **Configurar variables de entorno**
+```bash
+# Crear archivo .env
+echo "OPENROUTER_API_KEY=tu_api_key_aqui" > .env
+```
+
+## 🧪 Pruebas
+
+1. **Iniciar el servidor**
+```bash
+python server.py
+```
+
+2. **En otra terminal, ejecutar el cliente**
+```bash
+python client.py
+```
+
+3. **Probar herramienta básica**
+   - Seleccionar opción 1 (hola_mundo_mcp)
+   - Verificar la respuesta del modelo
+
+## 📊 Ejemplos de Uso
+
+### Ejemplo 1: Suma de números
+```python
+# Seleccionar opción 2 (suma)
+# El modelo ejecutará la suma y mostrará el resultado
+# Ejemplo de respuesta: "La suma de 5 y 3 es 8"
+```
+
+### Ejemplo 2: Hola Mundo personalizado
+```python
+# Seleccionar opción 1 (hola_mundo_mcp)
+# Si mencionas "cuba" en el mensaje, responderá "Hola desde Cuba"
+```
+
+## 🛡️ Licencia
+
+Este proyecto está bajo la Licencia MIT - ver el archivo [LICENSE](LICENSE) para más detalles.
+
+## 🙌 Créditos y Contacto
+
+Desarrollado por: **Abel Gómez Méndez**  
+E-mail: **abelmetaltele@gmail.com**  
+Móvil: **+5351368261**  
+Fecha: Agosto 2025
+
+## 🤝 Contribuciones
 
 ## 🛡️ Licencia
 
