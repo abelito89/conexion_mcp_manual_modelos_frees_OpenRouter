@@ -10,7 +10,8 @@ FRASES_POR_HERRAMIENTA = {
         "inicia con un hola mundo",
         "envía un mensaje de bienvenida",
         "haz un ping de prueba",
-        "usa la herramienta hola_mundo_mcp"
+        "usa la herramienta hola_mundo_mcp",
+        "usar la herramienta hola_mundo_mcp"
     ],
     "suma": [
         "voy a usar la herramienta suma",

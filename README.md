@@ -9,10 +9,10 @@
 Este sistema permite a un modelo de IA (como Mistral) interactuar con herramientas externas a través del **Model Context Protocol (MCP)**, incluso cuando el modelo **no soporta `tool_calls` nativos**.
 
 Dado que modelos gratuitos como `mistralai/mistral-7b-instruct` en OpenRouter **no generan `tool_calls` reales**, este sistema **simula el flujo MCP** mediante:
-- ✅ Detección de intención por nombre de herramienta.
-- ✅ Ejecución manual vía FastMCP.
-- ✅ Gestión dinámica del contexto.
-- ✅ Soporte para múltiples herramientas.
+- ✅ **Detección de intención semántica**: Utiliza embeddings para comprender la intención del modelo de usar una herramienta, en lugar de depender de frases exactas.
+- ✅ **Ejecución manual vía FastMCP**: Llama a las herramientas definidas en `server.py`.
+- ✅ **Gestión dinámica del contexto**: Adapta el `system_prompt` y el historial de mensajes para guiar al modelo en cada paso.
+- ✅ **Soporte para múltiples herramientas**: El sistema es fácilmente extensible.
 
 El sistema es **modular, interactivo, escalable y funcional en entornos con restricciones** (como Cuba), sin depender de modelos de pago.
 
@@ -20,24 +20,20 @@ El sistema es **modular, interactivo, escalable y funcional en entornos con rest
 
 ## 🔄 Flujo del sistema
 
-1. **Inicio**: El usuario inicia el programa y ve un menú interactivo.
-2. **Selección**: Elige una herramienta del menú (ej: `1` para `suma`).
-3. **Contexto temporal**: Se crea un archivo temporal a partir de `contexto/mensaje_modelo.json`, que contiene un `system prompt` que obliga al modelo a repetir el nombre de la herramienta.
-4. **Inyección de mensaje**: Se inyecta dinámicamente un mensaje como `"Herramienta 'suma'"` en el historial.
-5. **Solicitud al modelo**: Se envía el historial al modelo vía OpenRouter.
-6. **Detección de intención**: Si el modelo responde con `"Voy a usar la herramienta suma"`, se activa la ejecución.
-7. **Ejecución de herramienta**: Se llama a `server.py` vía FastMCP usando `ejecutar_tool_manual`.
-8. **Simulación de `tool_call`**: El resultado se agrega al historial como un mensaje de rol `tool`, usando `agregar_al_historial_simulando_call_tool`.
-9. **Segunda consulta**: Se pregunta al modelo `"¿Qué resultado se obtuvo?"` para que use el resultado.
-10. **Respuesta final**: El modelo genera una respuesta basada en el resultado.
-11. **Pausa para lectura**: El sistema espera a que el usuario presione `ENTER` antes de continuar.
-12. **Limpieza**: El archivo temporal se elimina, y el menú vuelve a mostrarse.
-13. **Persistencia**: El programa permanece activo hasta que el usuario elige salir (opción `0`).
+1. **Inicio y Selección**: El usuario ejecuta `client.py` y selecciona una herramienta del menú interactivo.
+2. **Inyección de Mensaje**: Se inyecta un mensaje en el historial para indicarle al modelo qué herramienta se ha seleccionado.
+3. **Detección de Intención**: Se envía el historial al modelo. El cliente utiliza un **detector semántico** (`debe_usar_tool_semantico`) para analizar la respuesta del modelo y determinar si tiene la intención de usar la herramienta.
+4. **Solicitud de Argumentos**: Si se detecta la intención, el sistema solicita al usuario los argumentos necesarios para la herramienta (ej: los números para la `suma`).
+5. **Ejecución de Herramienta**: Se ejecuta la herramienta correspondiente en `server.py` a través de FastMCP.
+6. **Simulación de `tool_call`**: El resultado de la herramienta se agrega al historial de conversación.
+7. **Generación de Respuesta Final**: Se cambia dinámicamente el `system_prompt` para instruir al modelo que presente el resultado de una manera amigable y conversacional. Se realiza una última llamada al modelo.
+8. **Visualización y Limpieza**: Se muestra la respuesta final al usuario, se guarda el historial y se limpia el contexto temporal para la siguiente ejecución.
 
 ---
 
 ## 🧩 Tecnologías clave
 
+- **Sentence Transformers**: Para la detección de intención semántica.
 - **FastMCP**: Para definir y ejecutar herramientas en `server.py`.
 - **Pydantic (`BaseModel`)**: Para estructurar y serializar los resultados de las herramientas (ej: `PingResponse`, `IntResponse`).
 - **OpenRouter**: Como proveedor del modelo IA.
@@ -64,9 +60,11 @@ Para que una nueva herramienta esté disponible para el modelo, sigue estos paso
 - Modifica la función `extraer_argumentos_necesarios_herramienta`.
 - Añade una condición para tu herramienta que devuelva los argumentos correctos según el contexto.
 
-### 4. **Agregarla al menú en `src/menu_interactivo.py`**
-- Añade la herramienta al diccionario `HERRAMIENTAS_DISPONIBLES`.
-- Ejemplo: `3: "mi_nueva_herramienta"`.
+### 4. **Añadir Frases de Ejemplo (Opcional pero Recomendado)**
+- En `src/deteccion_intencion/base_conocimiento.py`, añade frases de ejemplo para tu nueva herramienta. Esto mejorará la precisión de la detección semántica.
+
+### 5. **Agregarla al menú en `src/menu_interactivo.py`**
+- Añade la herramienta al diccionario que se carga desde `contrato_tools.json`. El menú se genera dinámicamente.
 
 ---
 
@@ -82,13 +80,18 @@ proyecto/
 │   └── mensaje_modelo.json       # Plantilla de contexto (system prompt)
 │
 └── src/
-    ├── mcp_manual.py             # Detección, ejecución y gestión de argumentos
-    ├── contrato_y_payload.py     # Carga contrato y crea payload
-    ├── chat_modelo_local.py      # Conexión a OpenRouter
-    ├── procesamiento_respuesta.py# Extracción de respuestas
+    ├── chat_modelo_local.py      # Conexión a OpenRouter y gestión de historial
+    ├── contrato_y_payload.py     # Carga de contrato y creación de payload
     ├── historial_y_contexto.py   # Gestión de historial y contexto temporal
+    ├── logging_mcp.py            # Sistema de logging con niveles y colores
+    ├── mcp_manual.py             # Detección, ejecución y gestión de argumentos
     ├── menu_interactivo.py       # Menú interactivo con pausas y limpieza
-    └── logging_mcp.py            # Sistema de logging con niveles y colores
+    ├── procesamiento_respuesta.py# Extracción de respuestas del modelo
+    └── deteccion_intencion/
+        ├── base_conocimiento.py  # Frases de ejemplo para la detección semántica
+        ├── detector.py           # Lógica de detección de intención semántica
+        ├── embeddings.py         # Creación de embeddings con Sentence Transformers
+        └── utils.py              # Funciones de utilidad (ej: similitud de coseno)
 ```
 
 ---

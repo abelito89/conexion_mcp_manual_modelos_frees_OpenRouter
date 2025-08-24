@@ -12,6 +12,7 @@ mcp = FastMCP("DemoLocura FastMCP")
 class PingResponse(BaseModel):
     mensaje: str
     timestamp: datetime
+    detalle: str
 
 class IntResponse(BaseModel):
     entero: str
@@ -19,8 +20,8 @@ class IntResponse(BaseModel):
 
 @mcp.tool()
 def hola_mundo_mcp(mensaje:str) -> PingResponse:
-    """Devuelve un mensaje de respuesta para verificar la conexión."""
-    return PingResponse(mensaje=mensaje, timestamp=datetime.now())
+    """Devuelve un mensaje de respuesta para verificar la conexión y la hora exacta del momento actual"""
+    return PingResponse(mensaje=mensaje, timestamp=datetime.now(), detalle=f"Se envía el siguiente mensaje: {mensaje} a la hora: {datetime.now()}")
 
 @mcp.tool()
 def suma(numero1:int, numero2:int) -> IntResponse:

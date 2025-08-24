@@ -5,7 +5,7 @@ from fastmcp.client.transports import PythonStdioTransport
 import datetime
 from datetime import datetime
 from historial_y_contexto import extraer_mensaje_usuario
-from logging_mcp import warning, info, success, separator
+from logging_mcp import warning, info, success, separator, debug
 
 
 def debe_usar_tool(texto: str, nombre_tool: str, palabras_clave: list[str] | None = None) -> bool:
@@ -22,7 +22,12 @@ def debe_usar_tool(texto: str, nombre_tool: str, palabras_clave: list[str] | Non
     Returns:
         bool: True si se detecta intención de usar la herramienta, False en caso contrario.
     """
+    debug("=== DETECCIÓN DE INTENCIÓN ===")
+    debug(f"Texto recibido: {texto}")
+    debug(f"Herramienta buscada: {nombre_tool}")
+    
     if not texto or not texto.strip():
+        debug("❌ Texto vacío o solo espacios")
         return False
 
     # Normalizar: convertir todo a minúsculas
@@ -39,7 +44,7 @@ def debe_usar_tool(texto: str, nombre_tool: str, palabras_clave: list[str] | Non
     claves_por_defecto = [
         f"{nombre_tool}",
         f"voy a usar {nombre_tool}",
-        f"voy a usar la herramienta {nombre_tool}",  # ← faltaba coma antes
+        f"voy a usar la herramienta {nombre_tool}",
         f"usaré {nombre_tool}",
         f"procedo a usar {nombre_tool}",
         f"ejecutaré {nombre_tool}",
@@ -49,9 +54,13 @@ def debe_usar_tool(texto: str, nombre_tool: str, palabras_clave: list[str] | Non
         f"es {nombre_tool}"
     ]
 
+    debug("🔍 Buscando coincidencias en claves por defecto:")
     for clave in claves_por_defecto:
+        debug(f"   Comprobando: '{clave}'")
         if clave in texto:
+            debug(f"✅ Coincidencia encontrada con: '{clave}'")
             return True
+    debug("❌ No se encontraron coincidencias en claves por defecto")
 
     # 3. Como respaldo: ¿menciona la herramienta en contexto de herramientas?
     contexto_herramientas = [
@@ -60,11 +69,19 @@ def debe_usar_tool(texto: str, nombre_tool: str, palabras_clave: list[str] | Non
         "llamar a la herramienta",
         "activar herramienta"
     ]
+    debug("🔍 Verificando mención de herramienta en contexto...")
     if nombre_tool in texto:
+        debug("✅ Herramienta mencionada en el texto")
         for contexto in contexto_herramientas:
+            debug(f"   Comprobando contexto: '{contexto}'")
             if contexto in texto:
+                debug(f"✅ Encontrado contexto válido: '{contexto}'")
                 return True
+        debug("❌ Herramienta mencionada pero sin contexto válido")
+    else:
+        debug("❌ Herramienta no mencionada en el texto")
 
+    debug("❌ No se detectó intención de usar la herramienta")
     return False
 
 
@@ -81,14 +98,16 @@ def extraer_argumentos_necesarios_herramienta(herramienta_server_mcp:str, mensaj
 
     if herramienta_server_mcp == "hola_mundo_mcp":
         ultimo_mensaje_usuario = extraer_mensaje_usuario(mensajes)
-        mensaje_a_enviar = "Hola desde Cuba" if "cuba" in ultimo_mensaje_usuario.lower() else "Hola"
+        mensaje_a_enviar = input(f"Introduce el mensaje a enviar: ")
         # === 10. Ejecutar herramienta genérica vía FastMCP ===
         # Se conecta al servidor MCP (server.py) y se llama a la herramienta.
         # El resultado se devuelve en formato serializable.
         argumentos_tool = {"mensaje": mensaje_a_enviar}
     elif herramienta_server_mcp == "suma":
-        argumentos_tool = {"numero1": 5, "numero2": 3}
-    
+        numero1 = int(input(f"Introduce el primer número: "))
+        numero2 = int(input(f"Introduce el segundo número: "))
+        argumentos_tool = {"numero1": numero1, "numero2": numero2}
+
     else:
 # Para cualquier otra herramienta, puedes manejarla aquí
         warning(f"⚠️ No se conocen los argumentos para '{herramienta_server_mcp}'")

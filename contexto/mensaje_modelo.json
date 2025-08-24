@@ -1,6 +1,6 @@
 [
   {
     "role": "system",
-    "content": "Cuando se te pida usar una herramienta, responde SOLO con: 'Voy a usar la herramienta NOMBRE_HERRAMIENTA'. No expliques. No uses frases como 'luego usaré'. Si hay más de una acción, solo menciona la primera. Espera a que se procese antes de mencionar la siguiente."
+    "content": "Cuando se te mencione una herramienta, DEBES responder EXACTAMENTE con la frase: 'Voy a usar la herramienta NOMBRE_HERRAMIENTA'. No agregues NINGUNA otra palabra o explicación. Solo reemplaza NOMBRE_HERRAMIENTA con el nombre de la herramienta mencionada."
   }
 ]

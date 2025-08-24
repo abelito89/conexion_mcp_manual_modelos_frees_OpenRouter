@@ -17,7 +17,7 @@ from src.contrato_y_payload import (lectura_contrato_tools, payload_para_modelo_
 from src.procesamiento_respuesta import (extraer_mensaje_modelo, extraer_contenido, imprimir_estructura_mensaje_enviado)
 from src.historial_y_contexto import (guardar_historial, crear_contexto_temporal)
 from src.menu_interactivo import menu_interactivo
-from src.logging_mcp import info, success, error, warning, separator
+from src.logging_mcp import info, success, error, debug, separator
 from src.deteccion_intencion.detector import debe_usar_tool_semantico
 
 
@@ -51,7 +51,7 @@ async def main(herramienta_server_mcp: str) -> None:
     # Este mensaje guía al modelo para que use la herramienta.
     mensajes.append({
         "role": "user",
-        "content": f"Herramienta '{herramienta_server_mcp}'"
+        "content": f"Te pasaré un nombre de una herramienta que es una funcion declarada en un server MCP: '{herramienta_server_mcp}. Necesito que redactes una respuesta que exprese intencion de usar dicha herramienta'"
     })
 
     # === 3. Cargar contrato de herramientas ===
@@ -83,13 +83,14 @@ async def main(herramienta_server_mcp: str) -> None:
         # Extraer mensaje del modelo
         mensaje = extraer_mensaje_modelo(response)
         contenido = mensaje.get("content", "").strip()
+        debug(f"Mensaje del modelo: {contenido}")
 
         # Detectar intención de usar la herramienta
         if debe_usar_tool_semantico(contenido, nombre_tool=herramienta_server_mcp):
             # Cambiar el system prompt para forzar respuesta con el resultado de la herramienta
             mensajes[0] = {
                 "role": "system",
-                "content": "Eres un asistente que SOLO debe mostrar el resultado de la herramienta ejecutada. Para suma, muestra el detalle de la suma. Para hola_mundo_mcp, muestra el mensaje y el timestamp. No agregues explicaciones adicionales ni otro texto."
+                "content": "Eres un asistente amigable. Has recibido el resultado de una herramienta. Tu tarea es presentar este resultado al usuario de forma natural y conversacional. Si el resultado contiene un campo 'detalle', basa tu respuesta principalmente en ese campo. Si no, resume la información clave (como 'mensaje' y 'timestamp') en una frase completa. No menciones estructuras de datos."
             }
             info(f"Se detectó intención de usar '{herramienta_server_mcp}'. Llamando a server.py...")
 
@@ -114,7 +115,7 @@ async def main(herramienta_server_mcp: str) -> None:
                 # Preguntar al modelo qué sigue (para encadenamiento)
                 mensajes.append({
                     "role": "user",
-                    "content": f"La herramienta '{herramienta_server_mcp}' devolvió un resultado. Resume en una frase el valor que se obtuvo y qué significa."
+                    "content": "Por favor, presenta el resultado que acabas de recibir de una forma amigable para el usuario."
                 })
 
             except Exception as e:
